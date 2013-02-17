@@ -9,6 +9,7 @@ IO = require '../../coffeeblog/log'
 coffeeblog = require '../../coffeeblog/coffeeblog'
 Database = coffeeblog.singleton().database
 config = require '../../config'
+benchmark = require('../../helpers/Helper.benchmark').singleton()
 
 class Pages extends Plugin
 	routes:[
@@ -19,6 +20,7 @@ class Pages extends Plugin
 				Database.get {postType:"page",name:request.params.page}, {}, (err, datas) ->
 					if err then IO.log "Failed to load page from memory"
 					if datas.length is 0
+						IO.log "No page found with that name, moving on..."
 						next()
 					for data in datas
 						if data.name is request.params.page
@@ -29,7 +31,8 @@ class Pages extends Plugin
 								IO.warn "Template does not have a page view"
 								IO.debug e
 								template.changeContent data.contents
-							response.send template.render()
+							response.write template.render()
+							response.end()
 							template.newContext()
 							return true
 						else return next()
